@@ -63,5 +63,5 @@ tasks.withType<Test> {
 }
 
 ktlint {
-    disabledRules.set(setOf("package-name")) // ✅ 패키지 이름 규칙 비활성화
+    disabledRules.set(setOf("package-name", "chain-wrapping"))
 }

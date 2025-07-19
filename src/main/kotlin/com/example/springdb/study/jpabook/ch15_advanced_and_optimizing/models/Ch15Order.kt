@@ -33,7 +33,7 @@ class Ch15Order {
 
     fun assignItem(
         item: Ch15Item,
-        count: Int,
+        count: Int
     ) {
         val orderItem = Ch15OrderItem()
         orderItem.order = this

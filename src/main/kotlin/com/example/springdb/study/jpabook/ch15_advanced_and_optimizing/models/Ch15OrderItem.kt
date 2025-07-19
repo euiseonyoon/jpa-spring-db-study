@@ -13,8 +13,8 @@ import jakarta.persistence.UniqueConstraint
 @Entity
 @Table(
     uniqueConstraints = [
-        UniqueConstraint(columnNames = ["order", "item"]),
-    ],
+        UniqueConstraint(columnNames = ["order", "item"])
+    ]
 )
 class Ch15OrderItem {
     @Id
