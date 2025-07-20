@@ -8,6 +8,7 @@ import jakarta.persistence.OptimisticLockException
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.context.annotation.Import
@@ -121,6 +122,82 @@ class Ch16VersionTest {
             future1.get()
         } catch (e: ExecutionException) {
             // SpringDataJpa를 사용하면 org.springframework.orm.ObjectOptimisticLockingFailureException 발생
+            assertTrue { e.cause is ObjectOptimisticLockingFailureException }
+        }
+
+        executor.shutdown()
+    }
+
+    /**
+     * 상황:
+     *         트렌젝션1 `LockModeType.OPTIMISTIC`을 사용하여 조회
+     *         트렌젝션2가 조회&수정 후 커밋
+     *         트렌젝션1을 조회 후 아무것도 하지 않고 커밋
+     *
+     * 기대:
+     *         트렌젝션1 이 조회 후, 아무런 수정조치 없이 그대로 커밋해도,
+     *         트렌젝션2로 인해 version이 바뀌었기 때문에 에러 발생
+     *
+     * 이점:
+     *         Dirty read(아직 커밋되지 않은 데이터를 읽음), Non-Repeatable read(조회 시마다 데이터의 내용이 바뀜)
+     *         을 방지 할 수 있다.
+     * */
+    @Test
+    fun `test search with LockModeType OPTIMISTIC`() {
+        val boardId = board.id!!
+        val executor = Executors.newFixedThreadPool(2)
+
+        val future1 = executor.submit<Ch16Board> {
+            boardService.findUsingJpaDirectly(
+                id = boardId,
+                delayTime = 300L
+            )
+        }
+
+        val future2 = executor.submit<Ch16Board> {
+            boardService.updateUsingJpaDirectly(
+                updateDto = Ch16UpdateDto(boardId, "tx2 new title", null),
+                delayTime = null
+            )
+        }
+
+        Thread.sleep(50)
+
+        try {
+            future2.get()
+            future1.get()
+        } catch (e: Exception) {
+            assertTrue { e.cause is ObjectOptimisticLockingFailureException }
+        }
+
+        executor.shutdown()
+    }
+
+    @Test
+    fun `test search with LockModeType OPTIMISTIC2`() {
+        val boardId = board.id!!
+        val executor = Executors.newFixedThreadPool(2)
+
+        val future1 = executor.submit<Ch16Board> {
+            boardService.findUsingRepository(
+                id = boardId,
+                delayTime = 300L
+            )
+        }
+
+        val future2 = executor.submit<Ch16Board> {
+            boardService.updateUsingJpaDirectly(
+                updateDto = Ch16UpdateDto(boardId, "tx2 new title", null),
+                delayTime = null
+            )
+        }
+
+        Thread.sleep(50)
+
+        try {
+            future2.get()
+            future1.get()
+        } catch (e: Exception) {
             assertTrue { e.cause is ObjectOptimisticLockingFailureException }
         }
 

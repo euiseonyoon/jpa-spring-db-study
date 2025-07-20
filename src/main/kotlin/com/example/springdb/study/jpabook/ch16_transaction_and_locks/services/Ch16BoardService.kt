@@ -4,6 +4,7 @@ import com.example.springdb.study.jpabook.ch16_transaction_and_locks.models.Ch16
 import com.example.springdb.study.jpabook.ch16_transaction_and_locks.models.Ch16UpdateDto
 import com.example.springdb.study.jpabook.ch16_transaction_and_locks.repositories.Ch16BoardRepository
 import jakarta.persistence.EntityManager
+import jakarta.persistence.LockModeType
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
@@ -38,5 +39,27 @@ class Ch16BoardService(
         }
         val updatedBoard = boardRepository.save(board)
         return updatedBoard
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    fun findUsingJpaDirectly(id: Long, delayTime: Long): Ch16Board {
+        // SELECT 만 해도 version이 업 된다.
+        val board = em.find(Ch16Board::class.java, id, LockModeType.OPTIMISTIC)
+
+        Thread.sleep(delayTime)
+
+        em.flush()
+        return board
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    fun findUsingRepository(id: Long, delayTime: Long): Ch16Board? {
+        // SELECT 만 해도 version이 업 된다.
+        val board = boardRepository.searchById(id)
+
+        Thread.sleep(delayTime)
+
+        em.flush()
+        return board
     }
 }
