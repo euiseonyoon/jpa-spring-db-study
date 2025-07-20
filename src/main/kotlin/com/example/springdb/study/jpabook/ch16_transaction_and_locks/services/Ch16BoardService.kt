@@ -1,0 +1,42 @@
+package com.example.springdb.study.jpabook.ch16_transaction_and_locks.services
+
+import com.example.springdb.study.jpabook.ch16_transaction_and_locks.models.Ch16Board
+import com.example.springdb.study.jpabook.ch16_transaction_and_locks.models.Ch16UpdateDto
+import com.example.springdb.study.jpabook.ch16_transaction_and_locks.repositories.Ch16BoardRepository
+import jakarta.persistence.EntityManager
+import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Propagation
+import org.springframework.transaction.annotation.Transactional
+
+@Service
+class Ch16BoardService(
+    private val em: EntityManager,
+    private val boardRepository: Ch16BoardRepository
+) {
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    fun updateUsingJpaDirectly(updateDto: Ch16UpdateDto, delayTime: Long?): Ch16Board {
+        val board = em.find(Ch16Board::class.java, updateDto.targetId)
+        updateDto.newTitle?.let { board.title = it }
+        updateDto.newContext?.let { board.context = it }
+
+        if (delayTime != null) {
+            Thread.sleep(delayTime)
+        }
+        em.flush()
+        em.clear()
+        return board
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    fun updateUsingRepository(updateDto: Ch16UpdateDto, delayTime: Long?): Ch16Board {
+        val board = boardRepository.findById(updateDto.targetId).orElse(null)
+        updateDto.newTitle?.let { board.title = it }
+        updateDto.newContext?.let { board.context = it }
+
+        if (delayTime != null) {
+            Thread.sleep(delayTime)
+        }
+        val updatedBoard = boardRepository.save(board)
+        return updatedBoard
+    }
+}
