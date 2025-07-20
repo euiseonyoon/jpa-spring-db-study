@@ -11,6 +11,8 @@ interface CommentWithLikesRepository : JpaRepository<CommentWithLikes, Long> {
     @Query("SELECT c FROM CommentWithLikes c WHERE c.post.id = :id")
     fun findWithPost(@Param("id") id: Long): List<CommentProjection>
 
-    @Query("SELECT new com.example.springdb.study.springdata.jpa.projection.CommentDto(c.likes, c.dislikes) FROM CommentWithLikes c WHERE c.post.id = :id")
+    @Query(
+        "SELECT new com.example.springdb.study.springdata.jpa.projection.CommentDto(c.likes, c.dislikes) FROM CommentWithLikes c WHERE c.post.id = :id"
+    )
     fun findCommentDtoById(@Param("id") id: Long): List<CommentDto>
 }
