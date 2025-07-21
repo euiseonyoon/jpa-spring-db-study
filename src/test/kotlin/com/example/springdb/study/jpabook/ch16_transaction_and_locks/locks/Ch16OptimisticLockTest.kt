@@ -12,6 +12,7 @@ import jakarta.persistence.OptimisticLockException
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.context.annotation.Import
@@ -79,12 +80,15 @@ class Ch16OptimisticLockTest {
         val boardId = board.id!!
         val executor = Executors.newFixedThreadPool(2)
 
+        // WHEN
         val future1 = executor.submit<Ch16Board> {
             boardService.updateUsingJpaDirectly(
                 updateDto = Ch16UpdateDto(boardId, "tx1 new title", null),
                 delayTime = 300L
             )
         }
+
+        Thread.sleep(50)
 
         val future2 = executor.submit<Ch16Board> {
             boardService.updateUsingJpaDirectly(
@@ -93,15 +97,14 @@ class Ch16OptimisticLockTest {
             )
         }
 
-        Thread.sleep(50)
-
-        try {
+        // THEN
+        val cause = assertThrows<ExecutionException> {
             future2.get()
             future1.get()
-        } catch (e: ExecutionException) {
-            // JPA를 바로 사용하면 jakarta.persistence.OptimisticLockException 발생
-            assertTrue { e.cause is OptimisticLockException }
-        }
+        }.cause
+
+        // JPA를 바로 사용하면 jakarta.persistence.OptimisticLockException 발생
+        assertTrue { cause is OptimisticLockException }
 
         executor.shutdown()
     }
@@ -112,12 +115,15 @@ class Ch16OptimisticLockTest {
         val boardId = board.id!!
         val executor = Executors.newFixedThreadPool(2)
 
+        // WHEN
         val future1 = executor.submit<Ch16Board> {
             boardService.updateUsingRepository(
                 updateDto = Ch16UpdateDto(boardId, "tx1 new title", null),
                 delayTime = 300L
             )
         }
+
+        Thread.sleep(50)
 
         val future2 = executor.submit<Ch16Board> {
             boardService.updateUsingRepository(
@@ -126,15 +132,13 @@ class Ch16OptimisticLockTest {
             )
         }
 
-        Thread.sleep(50)
-
-        try {
+        // THEN
+        val cause = assertThrows<ExecutionException> {
             future2.get()
             future1.get()
-        } catch (e: ExecutionException) {
-            // SpringDataJpa를 사용하면 org.springframework.orm.ObjectOptimisticLockingFailureException 발생
-            assertTrue { e.cause is ObjectOptimisticLockingFailureException }
-        }
+        }.cause
+        // SpringDataJpa를 사용하면 org.springframework.orm.ObjectOptimisticLockingFailureException 발생
+        assertTrue { cause is ObjectOptimisticLockingFailureException}
 
         executor.shutdown()
     }
@@ -158,12 +162,15 @@ class Ch16OptimisticLockTest {
         val boardId = board.id!!
         val executor = Executors.newFixedThreadPool(2)
 
+        // WHEN
         val future1 = executor.submit<Ch16Board> {
             boardService.findUsingJpaDirectly(
                 id = boardId,
                 delayTime = 300L
             )
         }
+
+        Thread.sleep(50)
 
         val future2 = executor.submit<Ch16Board> {
             boardService.updateUsingJpaDirectly(
@@ -172,14 +179,12 @@ class Ch16OptimisticLockTest {
             )
         }
 
-        Thread.sleep(50)
-
-        try {
+        // THEN
+        val cause = assertThrows<ExecutionException> {
             future2.get()
             future1.get()
-        } catch (e: Exception) {
-            assertTrue { e.cause is ObjectOptimisticLockingFailureException }
-        }
+        }.cause
+        assertTrue { cause is ObjectOptimisticLockingFailureException}
 
         executor.shutdown()
     }
@@ -189,12 +194,15 @@ class Ch16OptimisticLockTest {
         val boardId = board.id!!
         val executor = Executors.newFixedThreadPool(2)
 
+        // WHEN
         val future1 = executor.submit<Ch16Board> {
             boardService.findUsingRepository(
                 id = boardId,
                 delayTime = 300L
             )
         }
+
+        Thread.sleep(50)
 
         val future2 = executor.submit<Ch16Board> {
             boardService.updateUsingJpaDirectly(
@@ -203,14 +211,12 @@ class Ch16OptimisticLockTest {
             )
         }
 
-        Thread.sleep(50)
-
-        try {
+        // THEN
+        val cause = assertThrows<ExecutionException> {
             future2.get()
             future1.get()
-        } catch (e: Exception) {
-            assertTrue { e.cause is ObjectOptimisticLockingFailureException }
-        }
+        }.cause
+        assertTrue { cause is ObjectOptimisticLockingFailureException }
 
         executor.shutdown()
     }
