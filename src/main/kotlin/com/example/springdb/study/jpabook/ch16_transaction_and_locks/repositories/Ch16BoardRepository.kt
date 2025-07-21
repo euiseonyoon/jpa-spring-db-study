@@ -12,4 +12,8 @@ interface Ch16BoardRepository : JpaRepository<Ch16Board, Long> {
     @Lock(LockModeType.OPTIMISTIC)
     @Query("SELECT b FROM Ch16Board b WHERE id = :id")
     fun searchById(@Param("id") id: Long): Ch16Board?
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT b FROM Ch16Board b WHERE b.id = :id")
+    fun searchByIdForPessimisticUpdate(@Param("id") id: Long): Ch16Board?
 }

@@ -117,4 +117,23 @@ class Ch16BoardService(
         return board
     }
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    fun updateWithPessimisticLockSpringDataJpa(updateDto: Ch16UpdateDto, delayTime: Long?, lockTimeOut: Long?): Ch16Board {
+        // Lock Timeout 설정 (PostgreSQL)
+        if (lockTimeOut != null) {
+            em.createNativeQuery("SET LOCAL lock_timeout = '${lockTimeOut}ms'").executeUpdate()
+        }
+
+        val board = boardRepository.searchByIdForPessimisticUpdate(updateDto.targetId)
+        updateDto.newTitle?.let { board!!.title = it }
+        updateDto.newContext?.let { board!!.context = it }
+
+        if (delayTime != null) {
+            Thread.sleep(delayTime)
+        }
+
+        em.flush()
+        return board!!
+    }
+
 }

@@ -7,6 +7,7 @@ import com.example.springdb.study.jpabook.ch16_transaction_and_locks.services.Ch
 import jakarta.persistence.EntityManager
 import jakarta.persistence.EntityManagerFactory
 import jakarta.persistence.LockTimeoutException
+import jakarta.persistence.PessimisticLockException
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -176,6 +177,48 @@ class Ch16PessimisticLockTest {
             future2.get()
         }.cause
         assertTrue { cause is LockTimeoutException }
+
+        executor.shutdown()
+    }
+
+    @Test
+    @DisplayName("""
+       위의 테스트와 동일하지만, SpringDataJpa를 사용하는 테스트
+       발생하는 예외가 다르다.
+    """)
+    fun `test LockModeType Pessimistic Write with lock time out2`() {
+        val boardId = board.id!!
+        val executor = Executors.newFixedThreadPool(2)
+
+        val delayTime = 500L
+        val lockTimeOut = 100L
+
+        // WHEN
+        val future1 = executor.submit<Ch16Board> {
+            boardService.updateWithPessimisticLockSpringDataJpa(
+                updateDto = Ch16UpdateDto(boardId, "tx1 new title", null),
+                delayTime = delayTime,
+                lockTimeOut = null,
+            )
+        }
+
+        // future1이 lock을 잡을 수 있게 약간 늦게 시작.
+        Thread.sleep(50)
+
+        val future2 = executor.submit<Ch16Board> {
+            boardService.updateWithPessimisticLockSpringDataJpa(
+                updateDto = Ch16UpdateDto(boardId, "tx2 new title", null),
+                delayTime = null,
+                lockTimeOut = lockTimeOut,
+            )
+        }
+
+        // THEN
+        val cause = assertThrows<ExecutionException>{
+            future1.get()
+            future2.get()
+        }.cause
+        assertTrue { cause is PessimisticLockException }
 
         executor.shutdown()
     }
