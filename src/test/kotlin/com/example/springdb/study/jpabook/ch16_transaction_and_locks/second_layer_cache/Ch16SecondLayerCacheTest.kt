@@ -24,7 +24,6 @@ class Ch16SecondLayerCacheTest {
     lateinit var boardService: Ch16BoardService
 
     @Test
-    @Transactional
     fun test_query_cache_across_transactions() {
         // GIVEN
         boardService.set()

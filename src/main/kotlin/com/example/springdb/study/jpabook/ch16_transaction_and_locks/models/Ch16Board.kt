@@ -13,7 +13,6 @@ import org.springframework.cache.annotation.Cacheable
 @Cacheable
 @Cache(
     usage = CacheConcurrencyStrategy.READ_WRITE,
-    // region = "com.example.springdb.study.jpabook.ch16_transaction_and_locks.models.Ch16Board"
 )
 @Entity
 class Ch16Board {

@@ -14,15 +14,31 @@ services:
             - pgdata:/var/lib/postgresql/data
         restart: unless-stopped
 
-    infinispan:
+    infinispan1:
         image: infinispan/server:15.0
-        container_name: my-local-infinispan
+        container_name: infinispan-node-1
         environment:
-            USER: user
-            PASS: password
+            - USER=user
+            - PASS=password
+            - JAVA_OPTIONS=-Dinfinispan.cluster.name=my-cluster
         ports:
             - "11222:11222"
-        restart: unless-stopped
+        networks:
+            - infinispan-net
+
+    infinispan2:
+        image: infinispan/server:15.0
+        container_name: infinispan-node-2
+        environment:
+            - USER=user
+            - PASS=password
+            - JAVA_OPTIONS=-Dinfinispan.cluster.name=my-cluster
+        networks:
+            - infinispan-net
+
+networks:
+    infinispan-net:
+        driver: bridge
 
 volumes:
     pgdata:
