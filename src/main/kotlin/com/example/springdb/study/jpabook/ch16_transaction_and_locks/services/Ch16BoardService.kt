@@ -1,5 +1,6 @@
 package com.example.springdb.study.jpabook.ch16_transaction_and_locks.services
 
+import com.example.springdb.study.jpabook.ch16_transaction_and_locks.models.Ch16AttachedFile
 import com.example.springdb.study.jpabook.ch16_transaction_and_locks.models.Ch16Board
 import com.example.springdb.study.jpabook.ch16_transaction_and_locks.models.Ch16UpdateDto
 import com.example.springdb.study.jpabook.ch16_transaction_and_locks.repositories.Ch16BoardRepository
@@ -59,6 +60,24 @@ class Ch16BoardService(
 
         Thread.sleep(delayTime)
 
+        em.flush()
+        return board
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    fun addAttachedFiles(id: Long, files: List<Ch16AttachedFile>): Ch16Board {
+        val board = em.find(Ch16Board::class.java, id, LockModeType.OPTIMISTIC_FORCE_INCREMENT)
+        board.addAttachedFiles(files)
+        em.flush()
+        return board
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    fun addAttachedFiles2(id: Long, files: List<Ch16AttachedFile>): Ch16Board {
+        val board = em.find(Ch16Board::class.java, id)
+        board.addAttachedFiles(files)
+        em.lock(board, LockModeType.OPTIMISTIC_FORCE_INCREMENT)
+        em.persist(board)
         em.flush()
         return board
     }

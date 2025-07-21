@@ -1,31 +1,43 @@
 package com.example.springdb.study.jpabook.ch16_transaction_and_locks.locks
 
+import com.example.springdb.study.jpabook.ch16_transaction_and_locks.models.Ch16AttachedFile
 import com.example.springdb.study.jpabook.ch16_transaction_and_locks.models.Ch16Board
 import com.example.springdb.study.jpabook.ch16_transaction_and_locks.models.Ch16UpdateDto
+import com.example.springdb.study.jpabook.ch16_transaction_and_locks.repositories.Ch16BoardRepository
 import com.example.springdb.study.jpabook.ch16_transaction_and_locks.services.Ch16BoardService
+import com.example.springdb.study.logger
+import jakarta.persistence.EntityManager
 import jakarta.persistence.EntityManagerFactory
+import jakarta.persistence.LockModeType
 import jakarta.persistence.OptimisticLockException
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.context.annotation.Import
 import org.springframework.orm.ObjectOptimisticLockingFailureException
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executors
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 @DataJpaTest
 @Import(Ch16BoardService::class)
 class Ch16VersionTest {
+    private val log = logger()
 
     @Autowired
     lateinit var emf: EntityManagerFactory
 
     @Autowired
     lateinit var boardService: Ch16BoardService
+
+    @Autowired
+    lateinit var boardRepository: Ch16BoardRepository
+
+    @Autowired
+    lateinit var em: EntityManager
 
     lateinit var board: Ch16Board
 
@@ -203,4 +215,38 @@ class Ch16VersionTest {
 
         executor.shutdown()
     }
+
+    /**
+     * OPTIMISTIC_FORCE_INCREMENT 를 사용하는 경우, 논리적인 단위의 엔티티 묶음을 관리 할 수 있다.
+     *
+     * 예를 들어 아래처럼 어떠한 Board에 첨부파일을 추가하는 시나리오.
+     * Board의 내용에는 변함이 없다. 다만 해당 Board의 첨부파일이 추가되기만 한다.
+     * 하지만 추가하는 과정에서 Board의 version을 의도적으로 상향한다면,
+     * (Board + 첨부파일들(추가)) 의 논리적인 묶음으로 엔티티들을 묶어서 관리 한다.
+     *
+     * */
+    @Test
+    fun `test LockModeType OPTIMISTIC_FORCE_INCREMENT`() {
+        // GIVEN 1 : 이미 board 하나가 저장 되어 있음
+        val savedBoard = boardRepository.findById(board.id!!).orElse(null)
+        val initialBoardVersion = savedBoard.getVersion()
+        log.info("savedBoard initial version={}",initialBoardVersion)
+
+        // THEN 1
+        assertEquals(0L, initialBoardVersion)
+
+        // GIVEN 2
+        val filesToAttach = (0..1).map {
+            Ch16AttachedFile("file_{$it}")
+        }
+        val updatedBoard = boardService.addAttachedFiles(board.id!!, filesToAttach)
+        // THEN 2
+        assertEquals(initialBoardVersion + 1, updatedBoard.getVersion())
+
+        // GIVEN 3
+        val updatedAgainBoard = boardService.addAttachedFiles2(board.id!!, listOf(Ch16AttachedFile("another file")))
+        // THEN 3
+        assertEquals(initialBoardVersion + 2, updatedAgainBoard.getVersion())
+    }
+
 }

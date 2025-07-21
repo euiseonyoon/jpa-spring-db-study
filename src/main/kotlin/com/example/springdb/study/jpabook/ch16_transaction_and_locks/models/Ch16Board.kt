@@ -1,8 +1,10 @@
 package com.example.springdb.study.jpabook.ch16_transaction_and_locks.models
 
+import jakarta.persistence.CascadeType
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.Id
+import jakarta.persistence.OneToMany
 import jakarta.persistence.Version
 
 @Entity
@@ -13,6 +15,9 @@ class Ch16Board {
 
     var title: String? = null
     var context: String? = null
+
+    @OneToMany(mappedBy = "board", cascade = [CascadeType.ALL], orphanRemoval = true)
+    var attachedFiles: MutableSet<Ch16AttachedFile> = mutableSetOf()
 
     /**
      * Version은 아래의 타입에만 적용 가능
@@ -26,9 +31,21 @@ class Ch16Board {
     @Version
     private var version: Long = 0
 
+    fun getVersion(): Long = version
+
     constructor()
     constructor(title: String, context: String) {
         this.title = title
         this.context = context
+    }
+
+    fun addAttachedFiles(files: List<Ch16AttachedFile>) {
+        this.attachedFiles += files
+
+        files.forEach { file ->
+            if (file.board != this) {
+                file.board = this
+            }
+        }
     }
 }
