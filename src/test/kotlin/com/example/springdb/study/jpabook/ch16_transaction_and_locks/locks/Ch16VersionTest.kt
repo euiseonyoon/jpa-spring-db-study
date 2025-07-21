@@ -8,7 +8,6 @@ import com.example.springdb.study.jpabook.ch16_transaction_and_locks.services.Ch
 import com.example.springdb.study.logger
 import jakarta.persistence.EntityManager
 import jakarta.persistence.EntityManagerFactory
-import jakarta.persistence.LockModeType
 import jakarta.persistence.OptimisticLockException
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -248,5 +247,9 @@ class Ch16VersionTest {
         // THEN 3
         assertEquals(initialBoardVersion + 2, updatedAgainBoard.getVersion())
     }
+
+    /**
+     * NOTE: 다시 한번 강조하지만 낙관적 락은 트렌젝션이 COMMIT!! 될때 알 버전 체크를 하여 충돌 여부를 알 수 있다.
+     * */
 
 }
