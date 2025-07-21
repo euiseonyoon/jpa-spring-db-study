@@ -1,0 +1,11 @@
+<infinispan>
+    <cache-container>
+        <local-cache name="entity">
+            <memory max-count="10000"/>
+        </local-cache>
+        <!-- 쿼리 캐시 영역 추가 -->
+        <local-cache name="default-query-results-region">
+            <memory max-count="10000"/>
+        </local-cache>
+    </cache-container>
+</infinispan>

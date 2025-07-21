@@ -22,6 +22,13 @@ repositories {
 }
 
 dependencies {
+    // Jpa(Hibernate) 2차 캐싱 with infinispan
+    // https://infinispan.org/docs/stable/titles/hibernate/hibernate.html
+    implementation("org.infinispan:infinispan-spring-boot3-starter-remote:15.2.5.Final")
+    implementation("org.infinispan:infinispan-hibernate-cache-v62:15.2.5.Final")
+
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+
     implementation("org.springframework.boot:spring-boot-starter-validation")
     // web
     implementation("org.springframework.boot:spring-boot-starter-web")
