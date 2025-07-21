@@ -23,7 +23,7 @@ import kotlin.test.assertTrue
 
 @DataJpaTest
 @Import(Ch16BoardService::class)
-class Ch16VersionTest {
+class Ch16OptimisticLockTest {
     private val log = logger()
 
     @Autowired
