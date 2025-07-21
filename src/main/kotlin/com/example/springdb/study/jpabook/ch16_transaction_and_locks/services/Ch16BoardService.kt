@@ -81,4 +81,40 @@ class Ch16BoardService(
         em.flush()
         return board
     }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    fun readWithPessimisticLock(targetId: Long, delayTime: Long?): Ch16Board {
+        val board = em.find(Ch16Board::class.java, targetId, LockModeType.PESSIMISTIC_READ)
+
+        if (delayTime != null) {
+            Thread.sleep(delayTime)
+        }
+
+        return board
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    fun updateWithPessimisticLock(updateDto: Ch16UpdateDto, delayTime: Long?, lockTimeOut: Long?): Ch16Board {
+        // Lock Timeout 설정 (PostgreSQL)
+        if (lockTimeOut != null) {
+            em.createNativeQuery("SET LOCAL lock_timeout = '${lockTimeOut}ms'").executeUpdate()
+        }
+
+        val properties: MutableMap<String, Any> = mutableMapOf()
+        if (lockTimeOut != null) {
+            properties["javax.persistence.lock.timeout"] = lockTimeOut
+        }
+
+        val board = em.find(Ch16Board::class.java, updateDto.targetId, LockModeType.PESSIMISTIC_WRITE, properties)
+        updateDto.newTitle?.let { board.title = it }
+        updateDto.newContext?.let { board.context = it }
+
+        if (delayTime != null) {
+            Thread.sleep(delayTime)
+        }
+
+        em.flush()
+        return board
+    }
+
 }
