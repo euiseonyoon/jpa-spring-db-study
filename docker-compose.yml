@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+    postgres:
+        image: postgres:15-alpine
+        container_name: my-local-postgres
+        environment:
+            POSTGRES_DB: postgres
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+        ports:
+            - "5432:5432"
+        volumes:
+            - pgdata:/var/lib/postgresql/data
+        restart: unless-stopped
+
+    infinispan1:
+        image: infinispan/server:15.0
+        container_name: infinispan-node-1
+        environment:
+            - USER=user
+            - PASS=password
+            - JAVA_OPTIONS=-Dinfinispan.cluster.name=my-cluster
+        volumes:
+            - ./infinispan-server-config.xml:/opt/infinispan/server/conf/infinispan.xml
+        ports:
+            - "11222:11222"
+        networks:
+            - infinispan-net
+
+    infinispan2:
+        image: infinispan/server:15.0
+        container_name: infinispan-node-2
+        environment:
+            - USER=user
+            - PASS=password
+            - JAVA_OPTIONS=-Dinfinispan.cluster.name=my-cluster
+        volumes:
+            - ./infinispan-server-config.xml:/opt/infinispan/server/conf/infinispan.xml
+        networks:
+            - infinispan-net
+
+networks:
+    infinispan-net:
+        driver: bridge
+
+volumes:
+    pgdata:

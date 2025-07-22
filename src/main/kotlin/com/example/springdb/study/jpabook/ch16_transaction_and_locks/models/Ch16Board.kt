@@ -6,7 +6,12 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.Id
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Version
+import org.hibernate.annotations.Cache
+import org.hibernate.annotations.CacheConcurrencyStrategy
+import org.springframework.cache.annotation.Cacheable
 
+// @Cacheable
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE, )
 @Entity
 class Ch16Board {
     @Id
@@ -16,6 +21,7 @@ class Ch16Board {
     var title: String? = null
     var context: String? = null
 
+    @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
     @OneToMany(mappedBy = "board", cascade = [CascadeType.ALL], orphanRemoval = true)
     var attachedFiles: MutableSet<Ch16AttachedFile> = mutableSetOf()
 

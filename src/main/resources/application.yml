@@ -33,11 +33,24 @@ spring:
           batch_size: 100
           order_inserts: true
           order_updates: true
+        cache:
+          use_second_level_cache: true
+          use_query_cache: true
+          region:
+            factory_class: org.infinispan.hibernate.cache.v62.InfinispanRegionFactory
+            infinispan:
+              cache-container: default # Name of the cache container on the server
+        generate_statistics: true
+        jakarta:
+          persistence:
+            sharedCache:
+              mode: ENABLE_SELECTIVE
 
 logging:
   level:
     org:
       hibernate:
+        cache: TRACE
         SQL: DEBUG
         orm:
           jdbc:
@@ -54,3 +67,12 @@ logging:
       orm:
         jpa:
           JpaTransactionManager: DEBUG
+
+infinispan:
+  remote:
+    enabled: true
+    server-list: localhost:11222
+    auth-username: user
+    auth-password: password
+    java-serial-allowlist: com.example.springdb.study.jpabook.ch16_transaction_and_locks.models.*
+    # marshaller: org.infinispan.commons.marshall.ProtoStreamMarshaller

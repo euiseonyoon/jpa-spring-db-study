@@ -1,0 +1,49 @@
+<infinispan
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="urn:infinispan:config:15.0 https://infinispan.org/schemas/infinispan-config-15.0.xsd
+                            urn:infinispan:server:15.0 https://infinispan.org/schemas/infinispan-server-15.0.xsd"
+    xmlns="urn:infinispan:config:15.0"
+    xmlns:server="urn:infinispan:server:15.0">
+
+    <cache-container name="default" statistics="true"> <!--default-cache="default-hibernate-cache"-->
+        <transport cluster="${infinispan.cluster.name:cluster}" stack="${infinispan.cluster.stack:tcp}" node-name="${infinispan.node.name:}"/>
+        <security>
+            <authorization/>
+        </security>
+
+<!--        <distributed-cache name="default-hibernate-cache">-->
+<!--            <memory max-count="10000"/>-->
+<!--            <expiration lifespan="1000000" max-idle="100000"/>-->
+<!--        </distributed-cache>-->
+    </cache-container>
+
+    <server xmlns="urn:infinispan:server:15.0">
+        <interfaces>
+            <interface name="public">
+                <inet-address value="${infinispan.bind.address:127.0.0.1}"/>
+            </interface>
+        </interfaces>
+
+        <socket-bindings default-interface="public" port-offset="${infinispan.socket.binding.port-offset:0}">
+            <socket-binding name="default" port="${infinispan.bind.port:11222}"/>
+        </socket-bindings>
+
+        <security>
+            <security-realms>
+                <security-realm name="default">
+                    <!-- Uncomment to enable TLS on the realm -->
+                    <!-- server-identities>
+                       <ssl>
+                          <keystore path="server.pfx"
+                                    password="password" alias="server"
+                                    generate-self-signed-certificate-host="localhost"/>
+                       </ssl>
+                    </server-identities-->
+                    <properties-realm/>
+                </security-realm>
+            </security-realms>
+        </security>
+
+        <endpoints socket-binding="default" security-realm="default" />
+    </server>
+</infinispan>

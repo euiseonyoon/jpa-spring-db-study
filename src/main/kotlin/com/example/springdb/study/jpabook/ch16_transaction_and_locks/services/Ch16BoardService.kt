@@ -136,4 +136,30 @@ class Ch16BoardService(
         return board!!
     }
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    fun findBoardWith2LayerCache(): List<Ch16Board> {
+        em.clear()
+        val result = em.createQuery("SELECT b FROM Ch16Board b", Ch16Board::class.java)
+            .setHint("org.hibernate.cacheable", true)
+            .resultList
+
+        return result
+    }
+
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    fun set(): Ch16Board {
+        em.clear()
+
+        val board = Ch16Board("title1", "this is board1 context.")
+        val attachedFiles = listOf(Ch16AttachedFile("file_1"), Ch16AttachedFile("file_2"))
+
+        board.addAttachedFiles(attachedFiles)
+
+        em.persist(board)
+        em.flush()
+        em.clear()
+        return board
+    }
+
 }

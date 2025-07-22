@@ -6,7 +6,12 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
+import org.hibernate.annotations.Cache
+import org.hibernate.annotations.CacheConcurrencyStrategy
+import org.springframework.cache.annotation.Cacheable
 
+// @Cacheable
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE, )
 @Entity
 class Ch16AttachedFile {
     @Id
